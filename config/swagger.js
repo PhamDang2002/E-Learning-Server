@@ -35,7 +35,7 @@ export const swaggerOptions = {
       {
         url:
           process.env.NODE_ENV === 'production'
-            ? 'https://your-production-domain.com'
+            ? 'https://e-learning-server-ty2o.onrender.com'
             : `http://localhost:${process.env.PORT || 5000}`,
         description:
           process.env.NODE_ENV === 'production'
