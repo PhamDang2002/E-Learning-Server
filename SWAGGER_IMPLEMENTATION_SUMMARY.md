@@ -88,7 +88,7 @@ I have successfully designed and implemented comprehensive Swagger UI documentat
 ## 🚀 How to Access
 
 1. **Start the server**: `npm run dev`
-2. **Open browser**: Navigate to `https://elerning-server-6hiz.onrender.com`
+2. **Open browser**: Navigate to `https://e-learning-server-ty2o.onrender.com`
 3. **Authenticate**: Click "Authorize" and enter JWT token
 4. **Test APIs**: Use the interactive interface to test endpoints
 

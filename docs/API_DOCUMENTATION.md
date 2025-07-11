@@ -11,7 +11,7 @@ This document provides comprehensive information about the E-Learning Platform A
 The interactive Swagger UI documentation is available at:
 
 ```
-https://elerning-server-6hiz.onrender.com/api-docs
+https://e-learning-server-ty2o.onrender.com/api-docs
 ```
 
 ### Authentication
@@ -19,7 +19,7 @@ https://elerning-server-6hiz.onrender.com/api-docs
 Most endpoints require authentication using JWT tokens. Include the token in the `token` header:
 
 ```bash
-curl -H "token: your_jwt_token_here" https://elerning-server-6hiz.onrender.com/api/user/me
+curl -H "token: your_jwt_token_here" https://e-learning-server-ty2o.onrender.com/api/user/me
 ```
 
 ## 📚 API Endpoints Overview
@@ -172,7 +172,7 @@ Response includes JWT token for subsequent requests.
 
 ## 🔧 Testing with Swagger UI
 
-1. **Access Documentation**: Navigate to `https://elerning-server-6hiz.onrender.com/api-docs`
+1. **Access Documentation**: Navigate to `https://e-learning-server-ty2o.onrender.com/api-docs`
 
 2. **Authenticate**:
 
