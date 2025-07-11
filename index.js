@@ -6,6 +6,7 @@ import adminRoutes from './routes/admin.js';
 import userRoutes from './routes/user.js';
 import PayOS from '@payos/node';
 import cors from 'cors';
+import { swaggerSpec, swaggerUi, swaggerUiOptions } from './swagger.config.js';
 
 dotenv.config();
 
@@ -64,6 +65,19 @@ app.post('/api/create-payment-link', async (req, res) => {
 
 app.get('/', (req, res) => {
   res.send('Server is running');
+});
+
+// Swagger UI setup
+app.use(
+  '/api-docs',
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec, swaggerUiOptions),
+);
+
+// API documentation JSON endpoint
+app.get('/api-docs.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerSpec);
 });
 
 app.use('/uploads', express.static('uploads'));

@@ -1,0 +1,1361 @@
+openapi: 3.0.3
+info:
+  title: E-Learning Server API
+  description: |
+    Comprehensive API documentation for the E-Learning platform server.
+    This API provides endpoints for user management, course management, authentication,
+    payment processing, and administrative functions.
+
+    ## Authentication
+    Most endpoints require authentication using JWT tokens. Include the token in the `token` header.
+
+    ## File Uploads
+    File uploads use multipart/form-data with the field name `file`.
+
+  version: 1.0.0
+  contact:
+    name: E-Learning API Support
+    email: support@elearning.com
+  license:
+    name: ISC
+
+servers:
+  - url: http://localhost:5000
+    description: Development server
+  - url: https://api.elearning.com
+    description: Production server
+
+tags:
+  - name: Authentication
+    description: User authentication and account management
+  - name: Users
+    description: User profile and account operations
+  - name: Courses
+    description: Course management and enrollment
+  - name: Lectures
+    description: Lecture content and progress tracking
+  - name: Admin
+    description: Administrative functions (admin only)
+  - name: Payment
+    description: Payment processing and verification
+  - name: Progress
+    description: Learning progress tracking
+
+security:
+  - BearerAuth: []
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token for authentication. Include in the `token` header.
+
+  schemas:
+    User:
+      type: object
+      properties:
+        _id:
+          type: string
+          format: objectId
+          description: Unique user identifier
+        name:
+          type: string
+          description: User's full name
+        email:
+          type: string
+          format: email
+          description: User's email address
+        role:
+          type: string
+          enum: [user, admin]
+          default: user
+          description: User's current role
+        mainrole:
+          type: string
+          enum: [user, superadmin]
+          default: user
+          description: User's main role (permanent)
+        subscription:
+          type: array
+          items:
+            type: string
+            format: objectId
+          description: Array of subscribed course IDs
+        createdAt:
+          type: string
+          format: date-time
+          description: Account creation timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp
+      required:
+        - name
+        - email
+
+    Course:
+      type: object
+      properties:
+        _id:
+          type: string
+          format: objectId
+          description: Unique course identifier
+        title:
+          type: string
+          description: Course title
+        description:
+          type: string
+          description: Course description
+        image:
+          type: string
+          description: Path to course image file
+        price:
+          type: number
+          minimum: 0
+          description: Course price
+        duration:
+          type: number
+          minimum: 0
+          description: Course duration in hours
+        category:
+          type: string
+          description: Course category
+        createdBy:
+          type: string
+          description: Course creator name
+        createdAt:
+          type: string
+          format: date-time
+          description: Course creation timestamp
+      required:
+        - title
+        - description
+        - image
+        - price
+        - duration
+        - category
+        - createdBy
+
+    Lecture:
+      type: object
+      properties:
+        _id:
+          type: string
+          format: objectId
+          description: Unique lecture identifier
+        title:
+          type: string
+          description: Lecture title
+        description:
+          type: string
+          description: Lecture description
+        video:
+          type: string
+          description: Path to lecture video file
+        course:
+          type: string
+          format: objectId
+          description: Associated course ID
+        createdAt:
+          type: string
+          format: date-time
+          description: Lecture creation timestamp
+      required:
+        - title
+        - description
+        - video
+        - course
+
+    Progress:
+      type: object
+      properties:
+        _id:
+          type: string
+          format: objectId
+          description: Unique progress identifier
+        course:
+          type: string
+          format: objectId
+          description: Associated course ID
+        completedLectures:
+          type: array
+          items:
+            type: string
+            format: objectId
+          description: Array of completed lecture IDs
+        user:
+          type: string
+          format: objectId
+          description: Associated user ID
+        createdAt:
+          type: string
+          format: date-time
+          description: Progress creation timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last progress update timestamp
+
+    Payment:
+      type: object
+      properties:
+        _id:
+          type: string
+          format: objectId
+          description: Unique payment identifier
+        razorpay_order_id:
+          type: string
+          description: Razorpay order ID
+        razorpay_payment_id:
+          type: string
+          description: Razorpay payment ID
+        razorpay_signature:
+          type: string
+          description: Razorpay signature for verification
+        createdAt:
+          type: string
+          format: date-time
+          description: Payment creation timestamp
+      required:
+        - razorpay_order_id
+        - razorpay_payment_id
+        - razorpay_signature
+
+    Stats:
+      type: object
+      properties:
+        totalCourses:
+          type: integer
+          description: Total number of courses
+        totalLectures:
+          type: integer
+          description: Total number of lectures
+        totalUsers:
+          type: integer
+          description: Total number of users
+
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Error message
+      required:
+        - message
+
+    Success:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Success message
+      required:
+        - message
+
+    LoginResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Welcome message
+        token:
+          type: string
+          description: JWT authentication token
+        user:
+          $ref: '#/components/schemas/User'
+      required:
+        - message
+        - token
+        - user
+
+    RegisterResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Registration status message
+        activationToken:
+          type: string
+          description: Token for account activation
+      required:
+        - message
+        - activationToken
+
+    PaymentLinkResponse:
+      type: object
+      properties:
+        checkoutUrl:
+          type: string
+          format: uri
+          description: Payment checkout URL
+        orderCode:
+          type: integer
+          description: Generated order code
+      required:
+        - checkoutUrl
+        - orderCode
+
+    ProgressResponse:
+      type: object
+      properties:
+        courseProgressPercentage:
+          type: number
+          minimum: 0
+          maximum: 100
+          description: Course completion percentage
+        completedLectures:
+          type: integer
+          description: Number of completed lectures
+        allLectures:
+          type: integer
+          description: Total number of lectures in course
+        progress:
+          type: array
+          items:
+            $ref: '#/components/schemas/Progress'
+          description: Progress records
+      required:
+        - courseProgressPercentage
+        - completedLectures
+        - allLectures
+        - progress
+
+paths:
+  /:
+    get:
+      tags:
+        - Health Check
+      summary: Server health check
+      description: Check if the server is running
+      security: []
+      responses:
+        '200':
+          description: Server is running
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: 'Server is running'
+
+  /api/create-payment-link:
+    post:
+      tags:
+        - Payment
+      summary: Create payment link
+      description: Create a payment link for course purchase
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amount:
+                  type: number
+                  description: Payment amount
+                  example: 1000
+                description:
+                  type: string
+                  description: Payment description
+                  example: 'Course purchase'
+              required:
+                - amount
+                - description
+      responses:
+        '200':
+          description: Payment link created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentLinkResponse'
+        '400':
+          description: Bad request - missing required fields
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /receive-hook:
+    post:
+      tags:
+        - Payment
+      summary: Payment webhook
+      description: Receive payment webhook notifications
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Webhook payload from payment provider
+      responses:
+        '200':
+          description: Webhook received successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Echo of the received webhook data
+
+  # User Authentication Endpoints
+  /api/user/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register new user
+      description: Register a new user account and send OTP for verification
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: User's full name
+                  example: 'John Doe'
+                email:
+                  type: string
+                  format: email
+                  description: User's email address
+                  example: 'john.doe@example.com'
+                password:
+                  type: string
+                  format: password
+                  description: User's password
+                  example: 'securePassword123'
+              required:
+                - name
+                - email
+                - password
+      responses:
+        '200':
+          description: Registration successful, OTP sent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterResponse'
+        '400':
+          description: User already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/user/verify:
+    post:
+      tags:
+        - Authentication
+      summary: Verify user account
+      description: Verify user account using OTP and activation token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                otp:
+                  type: integer
+                  description: OTP received via email
+                  example: 123456
+                activationToken:
+                  type: string
+                  description: Activation token from registration
+                  example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+              required:
+                - otp
+                - activationToken
+      responses:
+        '200':
+          description: User verified successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+        '400':
+          description: Invalid OTP or expired token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/user/login:
+    post:
+      tags:
+        - Authentication
+      summary: User login
+      description: Authenticate user and return JWT token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: User's email address
+                  example: 'john.doe@example.com'
+                password:
+                  type: string
+                  format: password
+                  description: User's password
+                  example: 'securePassword123'
+              required:
+                - email
+                - password
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/user/me:
+    get:
+      tags:
+        - Users
+      summary: Get user profile
+      description: Get current user's profile information
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: token
+          in: header
+          required: true
+          schema:
+            type: string
+          description: JWT authentication token
+      responses:
+        '200':
+          description: User profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+        '403':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/user/forgot:
+    post:
+      tags:
+        - Authentication
+      summary: Forgot password
+      description: Send password reset link to user's email
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: User's email address
+                  example: 'john.doe@example.com'
+              required:
+                - email
+      responses:
+        '200':
+          description: Reset password link sent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/user/reset:
+    post:
+      tags:
+        - Authentication
+      summary: Reset password
+      description: Reset user password using reset token
+      security: []
+      parameters:
+        - name: token
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Password reset token from email
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                password:
+                  type: string
+                  format: password
+                  description: New password
+                  example: 'newSecurePassword123'
+              required:
+                - password
+      responses:
+        '200':
+          description: Password reset successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+        '400':
+          description: Invalid or expired token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/user/progress:
+    post:
+      tags:
+        - Progress
+      summary: Add lecture progress
+      description: Mark a lecture as completed for the current user
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: token
+          in: header
+          required: true
+          schema:
+            type: string
+          description: JWT authentication token
+        - name: course
+          in: query
+          required: true
+          schema:
+            type: string
+            format: objectId
+          description: Course ID
+        - name: lectureId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: objectId
+          description: Lecture ID to mark as completed
+      responses:
+        '200':
+          description: Progress already recorded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+        '201':
+          description: New progress added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+        '403':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    get:
+      tags:
+        - Progress
+      summary: Get user progress
+      description: Get user's progress for a specific course
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: token
+          in: header
+          required: true
+          schema:
+            type: string
+          description: JWT authentication token
+        - name: course
+          in: query
+          required: true
+          schema:
+            type: string
+            format: objectId
+          description: Course ID
+      responses:
+        '200':
+          description: Progress retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgressResponse'
+        '403':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Progress not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # Course Endpoints
+  /api/course/all:
+    get:
+      tags:
+        - Courses
+      summary: Get all courses
+      description: Retrieve all available courses
+      security: []
+      responses:
+        '200':
+          description: Courses retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  courses:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Course'
+
+  /api/course/{id}:
+    get:
+      tags:
+        - Courses
+      summary: Get single course
+      description: Retrieve details of a specific course
+      security: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: objectId
+          description: Course ID
+      responses:
+        '200':
+          description: Course retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  course:
+                    $ref: '#/components/schemas/Course'
+
+    post:
+      tags:
+        - Admin
+      summary: Add lecture to course
+      description: Add a new lecture to an existing course (admin only)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: token
+          in: header
+          required: true
+          schema:
+            type: string
+          description: JWT authentication token
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: objectId
+          description: Course ID
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: Lecture title
+                  example: "Variables and Data Types"
+                description:
+                  type: string
+                  description: Lecture description
+                  example: "Learn about JavaScript variables and data types"
+                file:
+                  type: string
+                  format: binary
+                  description: Lecture video file
+              required:
+                - title
+                - description
+                - file
+      responses:
+        '201':
+          description: Lecture added successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Lecture added successfully"
+                  lecture:
+                    $ref: '#/components/schemas/Lecture'
+        '403':
+          description: Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Course not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      tags:
+        - Admin
+      summary: Delete course
+      description: Delete a course and all its lectures (admin only)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: token
+          in: header
+          required: true
+          schema:
+            type: string
+          description: JWT authentication token
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: objectId
+          description: Course ID
+      responses:
+        '200':
+          description: Course deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+        '403':
+          description: Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/lectures/{id}:
+    get:
+      tags:
+        - Lectures
+      summary: Get course lectures
+      description: Retrieve all lectures for a specific course (requires subscription or admin role)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: token
+          in: header
+          required: true
+          schema:
+            type: string
+          description: JWT authentication token
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: objectId
+          description: Course ID
+      responses:
+        '200':
+          description: Lectures retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  lectures:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Lecture'
+        '400':
+          description: Not subscribed to course
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/lecture/{id}:
+    get:
+      tags:
+        - Lectures
+      summary: Get single lecture
+      description: Retrieve details of a specific lecture (requires subscription or admin role)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: token
+          in: header
+          required: true
+          schema:
+            type: string
+          description: JWT authentication token
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: objectId
+          description: Lecture ID
+      responses:
+        '200':
+          description: Lecture retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  lecture:
+                    $ref: '#/components/schemas/Lecture'
+        '400':
+          description: Not subscribed to course
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/mycourse:
+    get:
+      tags:
+        - Courses
+      summary: Get user's enrolled courses
+      description: Retrieve all courses the current user is enrolled in
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: token
+          in: header
+          required: true
+          schema:
+            type: string
+          description: JWT authentication token
+      responses:
+        '200':
+          description: User courses retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  courses:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Course'
+        '403':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/course/checkout/{id}:
+    post:
+      tags:
+        - Payment
+      summary: Checkout course
+      description: Initiate checkout process for a course
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: token
+          in: header
+          required: true
+          schema:
+            type: string
+          description: JWT authentication token
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: objectId
+          description: Course ID
+      responses:
+        '201':
+          description: Checkout initiated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  order:
+                    type: object
+                    description: Payment order details
+                  course:
+                    $ref: '#/components/schemas/Course'
+        '400':
+          description: Already enrolled in course
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/verification/{id}:
+    post:
+      tags:
+        - Payment
+      summary: Verify payment
+      description: Verify payment and enroll user in course
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: token
+          in: header
+          required: true
+          schema:
+            type: string
+          description: JWT authentication token
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: objectId
+          description: Course ID
+      responses:
+        '200':
+          description: Payment verified and course enrolled successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+        '400':
+          description: Already enrolled in course
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Course not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # Admin Endpoints
+  /api/course/new:
+    post:
+      tags:
+        - Admin
+      summary: Create new course
+      description: Create a new course (admin only)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: token
+          in: header
+          required: true
+          schema:
+            type: string
+          description: JWT authentication token
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: Course title
+                  example: "Introduction to JavaScript"
+                description:
+                  type: string
+                  description: Course description
+                  example: "Learn the fundamentals of JavaScript programming"
+                price:
+                  type: number
+                  minimum: 0
+                  description: Course price
+                  example: 99.99
+                duration:
+                  type: number
+                  minimum: 0
+                  description: Course duration in hours
+                  example: 40
+                category:
+                  type: string
+                  description: Course category
+                  example: "Programming"
+                createdBy:
+                  type: string
+                  description: Course creator name
+                  example: "John Instructor"
+                file:
+                  type: string
+                  format: binary
+                  description: Course image file
+              required:
+                - title
+                - description
+                - price
+                - duration
+                - category
+                - createdBy
+                - file
+      responses:
+        '201':
+          description: Course created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+        '403':
+          description: Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+
+
+  /api/lecture/{id}:
+    delete:
+      tags:
+        - Admin
+      summary: Delete lecture
+      description: Delete a specific lecture (admin only)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: token
+          in: header
+          required: true
+          schema:
+            type: string
+          description: JWT authentication token
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: objectId
+          description: Lecture ID
+      responses:
+        '200':
+          description: Lecture deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+        '403':
+          description: Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/stats:
+    get:
+      tags:
+        - Admin
+      summary: Get platform statistics
+      description: Get overall platform statistics (admin only)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: token
+          in: header
+          required: true
+          schema:
+            type: string
+          description: JWT authentication token
+      responses:
+        '200':
+          description: Statistics retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  stats:
+                    $ref: '#/components/schemas/Stats'
+        '403':
+          description: Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/users:
+    get:
+      tags:
+        - Admin
+      summary: Get all users
+      description: Get list of all users (admin only)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: token
+          in: header
+          required: true
+          schema:
+            type: string
+          description: JWT authentication token
+      responses:
+        '200':
+          description: Users retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+        '403':
+          description: Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/user/{id}:
+    put:
+      tags:
+        - Admin
+      summary: Update user role
+      description: Toggle user role between 'user' and 'admin' (superadmin only)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: token
+          in: header
+          required: true
+          schema:
+            type: string
+          description: JWT authentication token
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: objectId
+          description: User ID
+      responses:
+        '200':
+          description: Role updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+        '403':
+          description: Superadmin access required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # Static File Endpoints
+  /uploads/{filename}:
+    get:
+      tags:
+        - Files
+      summary: Get uploaded file
+      description: Retrieve uploaded files (images, videos)
+      security: []
+      parameters:
+        - name: filename
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Filename of the uploaded file
+      responses:
+        '200':
+          description: File retrieved successfully
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: File not found
